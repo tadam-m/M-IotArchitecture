@@ -1,0 +1,8 @@
+drwxr-xr-x   8 clustercb1  staff  256 Nov 16 17:55 .
+drwxrwxrwx+  4 nathane     staff  128 Nov 16 17:21 ..
+drwxr-xr-x  15 clustercb1  staff  480 Nov 16 18:07 .git
+-rw-r--r--   1 clustercb1  staff  351 Nov 16 17:21 README.md
+drwxr-xr-x   3 clustercb1  staff   96 Nov 16 17:43 data
+-rw-r--r--   1 clustercb1  staff  391 Nov 16 17:58 docker-compose.yml
+drwxr-xr-x   2 799         799     64 Nov 16 17:25 mytb-data
+drwxr-xr-x   2 799         799     64 Nov 16 17:25 mytb-logs
