@@ -15,92 +15,100 @@ import {
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 @Component
 export default  class Index extends Vue {
-  objP: any= undefined;
+  room: any= undefined;
   scene: any= undefined;
-  three() {
-      this.scene = new THREE.Scene();
-			const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-      const loader = new GLTFLoader();
-      const colorBackground = new THREE.Color(0x5D3FD3);
-      this.scene.background = colorBackground;
-      const light = new THREE.PointLight( 0xffffff, 1, 200 );
-      light.position.set( 0, 10, 0 );
-      this.scene.add( light );
+  camera: any = undefined;
+  renderer: any = undefined;
+  loaderModel: any= undefined;
+  controls: any = undefined;
 
-      const alight = new THREE.AmbientLight( 0xffffff, 1);
-      alight.position.set( 0, 0, 0 );
-      this.scene.add( alight );
+  initObject() {
+    this.scene = new THREE.Scene();
+		this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+    this.loaderModel = new GLTFLoader();
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
-      const alight2 = new THREE.PointLight( 0xffffff, 3, 200 )
-      alight2.position.set( 10, 10, 5 );
-      this.scene.add( alight2 );
+    this.controls.target.set( 0, 0.5, 0 );
+		this.controls.enablePan = false;
+		this.controls.enableDamping = true;
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.setSize( window.innerWidth, window.innerHeight );
+    document.body.appendChild(this.renderer.domElement);
+  }
 
-      loader.load(
-      // resource URL
-      "bedroom.gltf",
-
-      // onLoad callback
-      // Here the loaded data is assumed to be an object
-      ( obj:any ) => {
-        console.log("On est la")
-        
-        this.objP = obj.scene;
-        this.objP.position.y = -1.5;
-        // Add the loaded object to the scene
-        this.scene.add( this.objP );
+  loadModel() {
+    this.loaderModel.load(
+      "bedroom2.gltf",
+      (obj: any) => {
+        this.room = obj.scene;
+        this.room.position.y = -1.5;
+        this.scene.add( this.room );
       },
-
-      // onProgress callback
-      function ( xhr:any ) {
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded' );
-      },
-
-      // onError callback
-      function ( err:any ) {
-        console.error( 'An error happened' );
+      (err:any) => {
+        console.error('An error happened');
         console.error(err)
       }
     );
-      
-			const renderer = new THREE.WebGLRenderer();
+  }
 
-      const controls = new OrbitControls(camera, renderer.domElement);
-      controls.update();
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
+  initCamera() {
+    this.camera.position.z = -7;
+    this.camera.position.y = 7;
+    this.camera.position.x = 10;
+    this.camera.lookAt(0, 0, 0);
+  }
 
-			const geometry = new THREE.BoxGeometry();
-			const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-			const cube = new THREE.Mesh( geometry, material );
-			//scene.add( cube );
+  initLight() {
+    const colorBackground = new THREE.Color(0x4B0082);
+    const light = new THREE.PointLight(0x6495ed, 5, 200);
+    const alight = new THREE.AmbientLight(0xffffff, 1);
+    const alight2 = new THREE.PointLight(0xffffff, 3, 200)
+    const directionalLight = new THREE.DirectionalLight( 0xffffff, 4.5 );
 
-			camera.position.z = -7;
-      camera.position.y = 7;
-      camera.position.x = 10;
-      camera.lookAt(0, 0, 0);
+    const pmremGenerator = new THREE.PMREMGenerator( this.renderer );
+    this.scene.environment = pmremGenerator.fromScene( new RoomEnvironment(), 0.04 ).texture;
+    light.position.set(0, 10, 0);
+    alight.position.set(0, 0, 0);
+    alight2.position.set(10, 10, 5);
 
-			const animate = () => {
-				requestAnimationFrame( animate );
+    this.scene.background = colorBackground;
+    //this.scene.background = new THREE.Color( 0xbfe3dd );
+   // this.scene.add(light);
+    //this.scene.add(alight);
+   // this.scene.add( directionalLight );
+    //this.scene.add(alight2);
+  }
 
-				//cube.rotation.x += 0.01;
-				//cube.rotation.y += 0.01;
-        if (this.objP) {
-          this.objP.rotation.y += 0.001;
-          //this.objP.rotation.x += 0.01;
-        }
-        
-
-				renderer.render(this.scene, camera );
-			};
-
-			animate();
+  animate() {
+      this.controls.update();
+    	requestAnimationFrame(this.animate);
+      if (this.room) {
+        //this.room.rotation.y += 0.001;
+      }
+      this.controls.update();
+      this.renderer.render(this.scene, this.camera);
   }
 
   mounted() {
-    this.three();
+    this.initObject();
+    this.loadModel();
+    this.initLight();
+    this.initCamera();
+    this.animate();
   }
 }
 </script>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+</style>
