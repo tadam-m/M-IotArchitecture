@@ -13,6 +13,13 @@ services:
     volumes:
       - mytb-data:/data
       - mytb-logs:/var/log/thingsboard
+  my-tb-gateway:
+    restart: always
+    image: "thingsboard/tb-gateway"
+    volumes:
+      - .tb-gateway/config:/thingsboard_gateway/config
+      - .tb-gateway/logs:/thingsboard_gateway/logs
+      - .tb-gateway/extensions:/thingsboard_gateway/extensions
 volumes:
   mytb-data:
     external: true
