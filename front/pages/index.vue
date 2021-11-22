@@ -45,7 +45,7 @@ export default  class Index extends Vue {
 
   loadModel() {
     this.loaderModel.load(
-      "bedroom2.gltf",
+      "Bedroom2.gltf",
       (obj: any) => {
         this.room = obj.scene;
         this.room.position.y = -1.5;
