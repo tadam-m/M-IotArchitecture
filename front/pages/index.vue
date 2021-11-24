@@ -28,15 +28,17 @@ export default  class Index extends Vue {
 
   initObject() {
     this.scene = new THREE.Scene();
-		this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+		this.camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000 );
     this.loaderModel = new GLTFLoader();
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    this.controls.target.set( 0, 0.5, 0 );
-		this.controls.enablePan = false;
+
+    this.controls.target.set( 0, 2, 0 );
+    this.controls.update();
+    this.controls.enablePan = false;
 		this.controls.enableDamping = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -48,8 +50,14 @@ export default  class Index extends Vue {
       "Bedroom3.gltf",
       (obj: any) => {
         this.room = obj.scene;
-        this.room.position.y = -1.5;
-        this.scene.add( this.room );
+        this.room.position.y = -5.5;
+        this.room.position.x = 0;
+        this.room.position.z = -15;
+        this.scene.add(this.room);
+        this.initCamera()
+      },
+      (err2:any) =>{
+
       },
       (err:any) => {
         console.error('An error happened');
@@ -59,10 +67,11 @@ export default  class Index extends Vue {
   }
 
   initCamera() {
-    this.camera.position.z = -7;
-    this.camera.position.y = 7;
-    this.camera.position.x = 10;
-    this.camera.lookAt(0, 0, 0);
+    this.camera.position.z = 2.56;
+    this.camera.position.y = 6.9;
+    this.camera.position.x = 9.9; 
+    this.camera.zoom = 0.3;
+    this.camera.lookAt(this.room.position);
   }
 
   initLight() {
@@ -87,7 +96,6 @@ export default  class Index extends Vue {
   }
 
   animate() {
-      this.controls.update();
     	requestAnimationFrame(this.animate);
       if (this.room) {
         //this.room.rotation.y += 0.001;
@@ -96,12 +104,36 @@ export default  class Index extends Vue {
       this.renderer.render(this.scene, this.camera);
   }
 
+  listenKeyboard() {
+    document.addEventListener("keydown", (event) => {
+      var keyCode = event.which;
+        if (keyCode == 38) {
+            this.room.position.x += 1;
+        } else if (keyCode == 40) {
+            this.room.position.x -= 1;
+        } else if (keyCode == 37) {
+            this.room.position.z -= 1;
+        } else if (keyCode == 39) {
+            this.room.position.z += 1;
+        } else if (keyCode == 78) {
+           this.room.position.set(0, 0, 0);
+        }
+        console.log("Room position = ");
+        console.log(this.room.position);
+        console.log("Camera position = ");
+        console.log(this.camera.position);
+        console.log("Zoom Orbit Control = ");
+        
+    }, false);
+  }
+
   mounted() {
     this.initObject();
     this.loadModel();
+    //this.initCamera();
     this.initLight();
-    this.initCamera();
     this.animate();
+    this.listenKeyboard();
   }
 }
 </script>
