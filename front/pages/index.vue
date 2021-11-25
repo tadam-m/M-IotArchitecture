@@ -39,6 +39,10 @@ export default  class Index extends Vue {
   selectedObjects:any[] = [];
 
   lightOffice: any= undefined;
+  lightEntrie: any= undefined;
+  lightKitchen: any= undefined;
+  lightToilet: any=undefined;
+  lightBedroom: any=undefined;
   
 
   initObject() {
@@ -58,7 +62,7 @@ export default  class Index extends Vue {
 		this.controls.enableDamping = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
+    //this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
     document.body.appendChild(this.renderer.domElement);
   }
 
@@ -71,9 +75,9 @@ export default  class Index extends Vue {
     this.outlinePass = new OutlinePass( new THREE.Vector2(window.innerWidth, window.innerHeight), 
       this.scene, this.camera);
     this.outlinePass.edgeStrength = Number(10);
-    this.outlinePass.edgeGlow = Number(1);
+    this.outlinePass.edgeGlow = Number(0);
     this.outlinePass.edgeThickness = Number(1);
-    this.outlinePass.pulsePeriod = Number(5);
+    this.outlinePass.pulsePeriod = Number(0);
     this.outlinePass.visibleEdgeColor.set("#ffffff");
     this.outlinePass.hiddenEdgeColor.set("#000000");
     this.composer.addPass(this.outlinePass);
@@ -88,7 +92,7 @@ export default  class Index extends Vue {
 
   loadModel() {
     this.loaderModel.load(
-      "Bedroom3.gltf",
+      "Bedroom4.gltf",
       (obj: any) => {
         this.room = obj.scene;
         this.room.position.y = -5.5;
@@ -118,13 +122,26 @@ export default  class Index extends Vue {
   }
 
   initLight() {
+    const colorLightDefault = new THREE.Color(0x5D3FD3);
     const colorBackground = new THREE.Color(0x4B0082);
-    this.lightOffice = new THREE.PointLight(0x6495ed, 5, 200);
+    this.lightOffice = new THREE.PointLight(0x5D3FD3, 5, 200);
+    this.lightEntrie = new THREE.PointLight(0x5D3FD3, 5, 200);
+    this.lightKitchen = new THREE.PointLight(0x5D3FD3, 5, 200);
+    this.lightBedroom = new THREE.PointLight(0x5D3FD3, 5, 200);
+    this.lightToilet = new THREE.PointLight(0x5D3FD3, 5, 200);
 
-    this.lightOffice.position.set(6, 0, -16);
+    this.lightOffice.position.set(6, -3, -16);
+    this.lightEntrie.position.set(6, -3, 0);
+    this.lightKitchen.position.set(6, -3, 16);
+    this.lightBedroom.position.set(-8, -3, 0);
+    this.lightToilet.position.set(-12, -3, 18);
 
     this.scene.background = colorBackground;
     this.scene.add(this.lightOffice);
+    this.scene.add(this.lightEntrie);
+    this.scene.add(this.lightKitchen);
+    this.scene.add(this.lightBedroom);
+    this.scene.add(this.lightToilet);
   }
 
   animate() {
@@ -140,24 +157,20 @@ export default  class Index extends Vue {
   listenKeyboard() {
     document.addEventListener("keydown", (event) => {
       var keyCode = event.which;
-        // if (keyCode == 38) {
-        //     this.room.position.x += 10;
-        // } else if (keyCode == 40) {
-        //     this.room.position.x -= 10;
-        // } else if (keyCode == 37) {
-        //     this.room.position.z -= 10;
-        // } else if (keyCode == 39) {
-        //     this.room.position.z += 10;
-        // } else if (keyCode == 78) {
-        //    this.room.position.set(0, 0, 0);
-        // }
-        this.debugObject(this.lightOffice, "LightOffice", keyCode);
-       // console.log("Room position = ");
-       // console.log(this.room.position);
-        //console.log("Camera position = ");
-        //console.log(this.camera.position);
-        //console.log("Zoom Orbit Control = ");
+      //this.debugObject(this.lightOffice, "camera", keyCode);
     }, false);
+  }
+
+  checkIntersectedObjet(name:any) {
+    const ampoules = ["AmpouleEntrie", "AmpouleToilet", "AmpouleOffice", "AmpouleKitchen", "AmpouleBedroom"]
+    
+    if (ampoules.includes(name)) {
+      this.openPopup(name);
+    }
+  }
+
+  openPopup(name: any) {
+    console.log("Intersect", name)
   }
 
   debugObject(obj: any, str:any, keyCode: any) {
@@ -196,8 +209,8 @@ export default  class Index extends Vue {
     if (!this.outlinePass) return;
     if (intersects.length > 0) {
       const selectedObject = intersects[0].object;
-      this.addSelectedObject( selectedObject );
-    //  console.log("Intersect")
+      this.addSelectedObject(selectedObject);
+      this.checkIntersectedObjet(selectedObject.name)
       this.outlinePass.selectedObjects = this.selectedObjects;
     } else {
       this.outlinePass.selectedObjects = [];
@@ -217,7 +230,7 @@ export default  class Index extends Vue {
 }
 </script>
 
-<style>
+<style >
   * {
     margin: 0;
     padding: 0;
