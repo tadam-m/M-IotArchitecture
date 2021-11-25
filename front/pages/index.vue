@@ -1,4 +1,34 @@
 <template>
+    <transition name="fade">
+      <div id="popup-ampoule" v-if="popupAmpoule">
+        <div id="light-icon-close" v-on:click="closePopupLight">
+          <svg class="svg-icon" viewBox="0 0 20 20">
+            <path d="M14.776,10c0,0.239-0.195,0.434-0.435,0.434H5.658c-0.239,0-0.434-0.195-0.434-0.434s0.195-0.434,0.434-0.434h8.684C14.581,9.566,14.776,9.762,14.776,10 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.691-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.382,10c0-4.071-3.312-7.381-7.382-7.381C5.929,2.619,2.619,5.93,2.619,10c0,4.07,3.311,7.382,7.381,7.382C14.07,17.383,17.382,14.07,17.382,10"></path>
+          </svg>
+        </div>
+        <div class="popup-header">
+            <div>
+              {{currentNameObject}}
+            </div>
+            <img>
+        </div>
+        <div class="popup-body">
+          <div id="body-on-off">
+            <input type="checkbox">
+            <span class="slider round"></span>
+          </div>
+          <div id="body-color">
+            <p class="title-str">Color</p>
+            <input type="color" id="color-light" name="head" 
+              value="#e66465">
+           
+          </div>
+        </div>
+        <div class="popup-footer">
+          <button v-on:click="popupUpdateLight">Update</button>
+        </div>
+      </div>
+    </transition>
 </template>
 
 <script lang="ts">
@@ -26,7 +56,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
   
 @Component
 export default  class Index extends Vue {
-  room: any= undefined;
+  room: any = undefined;
   scene: any= undefined;
   camera: any = undefined;
   renderer: any = undefined;
@@ -37,6 +67,7 @@ export default  class Index extends Vue {
   composer: any = undefined; 
   outlinePass: any = undefined;
   selectedObjects:any[] = [];
+  currentNameObject :any = "";
 
   lightOffice: any= undefined;
   lightEntrie: any= undefined;
@@ -44,6 +75,7 @@ export default  class Index extends Vue {
   lightToilet: any=undefined;
   lightBedroom: any=undefined;
   
+  popupAmpoule: any = false;
 
   initObject() {
     this.scene = new THREE.Scene();
@@ -62,7 +94,7 @@ export default  class Index extends Vue {
 		this.controls.enableDamping = true;
     this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    //this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
+    this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
     document.body.appendChild(this.renderer.domElement);
   }
 
@@ -72,7 +104,7 @@ export default  class Index extends Vue {
     const renderPass = new RenderPass(this.scene, this.camera);
     this.composer.addPass(renderPass);
 
-    this.outlinePass = new OutlinePass( new THREE.Vector2(window.innerWidth, window.innerHeight), 
+    this.outlinePass = new OutlinePass(new THREE.Vector2(window.innerWidth, window.innerHeight), 
       this.scene, this.camera);
     this.outlinePass.edgeStrength = Number(10);
     this.outlinePass.edgeGlow = Number(0);
@@ -88,6 +120,10 @@ export default  class Index extends Vue {
     effectFXAA.uniforms['resolution'].value.set(1 / window.innerWidth, 1 / window.innerHeight);
     effectFXAA.renderToScreen = true;
     this.composer.addPass(effectFXAA);
+  }
+
+  closePopupLight() {
+    this.popupAmpoule = false;
   }
 
   loadModel() {
@@ -124,11 +160,11 @@ export default  class Index extends Vue {
   initLight() {
     const colorLightDefault = new THREE.Color(0x5D3FD3);
     const colorBackground = new THREE.Color(0x4B0082);
-    this.lightOffice = new THREE.PointLight(0x5D3FD3, 5, 200);
-    this.lightEntrie = new THREE.PointLight(0x5D3FD3, 5, 200);
-    this.lightKitchen = new THREE.PointLight(0x5D3FD3, 5, 200);
-    this.lightBedroom = new THREE.PointLight(0x5D3FD3, 5, 200);
-    this.lightToilet = new THREE.PointLight(0x5D3FD3, 5, 200);
+    this.lightOffice = new THREE.PointLight(0x5D3FD3, 2, 200);
+    this.lightEntrie = new THREE.PointLight(0x5D3FD3, 2, 200);
+    this.lightKitchen = new THREE.PointLight(0x5D3FD3, 2, 200);
+    this.lightBedroom = new THREE.PointLight(0x5D3FD3, 2, 200);
+    this.lightToilet = new THREE.PointLight(0x5D3FD3, 2, 200);
 
     this.lightOffice.position.set(6, -3, -16);
     this.lightEntrie.position.set(6, -3, 0);
@@ -145,13 +181,13 @@ export default  class Index extends Vue {
   }
 
   animate() {
-    	requestAnimationFrame(this.animate);
-      if (this.room) {
-        //this.room.rotation.y += 0.001;
-      }
-      this.controls.update();
-      //this.renderer.render(this.scene, this.camera);
-      this.composer.render();
+    requestAnimationFrame(this.animate);
+    if (this.room) {
+      //this.room.rotation.y += 0.001;
+    }
+    this.controls.update();
+    //this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 
   listenKeyboard() {
@@ -162,15 +198,43 @@ export default  class Index extends Vue {
   }
 
   checkIntersectedObjet(name:any) {
-    const ampoules = ["AmpouleEntrie", "AmpouleToilet", "AmpouleOffice", "AmpouleKitchen", "AmpouleBedroom"]
+    const ampoules = ["AmpouleEntrie", "AmpouleToilet", "AmpouleOffice", "AmpouleKitchen",
+     "AmpouleBedroom"]
     
     if (ampoules.includes(name)) {
-      this.openPopup(name);
+      this.openPopupAmpoule(name);
     }
   }
 
-  openPopup(name: any) {
-    console.log("Intersect", name)
+  openPopupAmpoule(name: any) {
+    if (this.popupAmpoule === true) return;
+    let colorPicker = (<HTMLInputElement>document.getElementById("color-light"));
+
+    console.log("Intersect", name);
+    this.popupAmpoule = true;
+    this.currentNameObject = name;
+  }
+
+  popupUpdateLight() {
+    let popup = document.getElementById("popup-ampoule");
+    let light = this.scene.getObjectByName(this.currentNameObject);
+
+    let colorPicker = (<HTMLInputElement>document.getElementById("color-light"));
+    let valuePicker = parseInt(colorPicker?.value.replace('#', '0x'), 16);
+
+    if (this.currentNameObject === "AmpouleEntrie") {
+      this.lightEntrie.color.setHex(valuePicker);
+    } else if (this.currentNameObject === "AmpouleToilet") {
+      this.lightToilet.color.setHex(valuePicker);
+    } else if (this.currentNameObject === "AmpouleOffice") {
+      this.lightOffice.color.setHex(valuePicker);
+    } else if (this.currentNameObject === "AmpouleKitchen") {
+      this.lightKitchen.color.setHex(valuePicker);
+    } else if (this.currentNameObject === "AmpouleBedroom") {
+      this.lightBedroom.color.setHex(valuePicker);
+    }
+    light.material.color.set(valuePicker);
+    this.popupAmpoule = false;
   }
 
   debugObject(obj: any, str:any, keyCode: any) {
@@ -221,18 +285,92 @@ export default  class Index extends Vue {
   mounted() {
     this.initObject();
     this.loadModel();
-    //this.initCamera();
     this.initLight();
     this.animate();
     this.listenKeyboard();
-    window.addEventListener( 'mousemove', this.onMouseMove, false );
+    window.addEventListener('mousemove', this.onMouseMove, false );
   }
-}
+
+  init() {
+  }
+ }
 </script>
 
-<style >
+<style  lang="scss">
   * {
     margin: 0;
     padding: 0;
   }
+
+  #popup-ampoule {
+    position: absolute;
+    left:10%;
+    padding: 20px;
+    top:25%;
+    background: white;
+    border-radius: 4px;
+    min-width: 200px;
+    min-height: 300px;
+    #light-icon-close {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+        &:hover {
+          fill: hotpink;
+        }
+        .svg-icon {
+          width: 25px;
+          height: 25px;
+          transition: 0.5s;
+          fill: inherit;
+          path {
+            fill: inherit;
+          }
+        }
+    }
+    .popup-header {
+      margin-top: 20px;
+      position:relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .popup-body {
+      margin-top: 40px;
+      #body-on-off {
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+        align-items: center;
+      }
+      #body-color {
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+        align-items: center;
+        .title-str {
+          margin-right: 20px;
+        }
+      }
+    }
+    .popup-footer {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        button {
+        }
+    }
+  }
+
+  .fade-enter-to, .fade-leave-active {
+    opacity: 100;
+  }
+  .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+    opacity: 0;
+    transition: opacity 1.5s all;
+  }
+
+
 </style>
