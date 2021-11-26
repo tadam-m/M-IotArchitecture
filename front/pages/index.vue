@@ -103,6 +103,10 @@ export default class Index extends Vue {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
     document.body.appendChild(this.renderer.domElement);
+    document.body.addEventListener('click', () => {
+      if (this.selectedObjects.length > 0)
+        this.checkIntersectedObjet(this.selectedObjects[0].name)
+    })
   }
 
   initOutline() {
@@ -303,7 +307,6 @@ export default class Index extends Vue {
     if (intersects.length > 0) {
       const selectedObject = intersects[0].object;
       this.addSelectedObject(selectedObject);
-      this.checkIntersectedObjet(selectedObject.name)
       this.outlinePass.selectedObjects = this.selectedObjects;
     } else {
       this.outlinePass.selectedObjects = [];
@@ -315,7 +318,7 @@ export default class Index extends Vue {
     this.loadModel();
     this.animate();
     this.listenKeyboard();
-    window.addEventListener('mousemove', this.onMouseMove, false );
+    window.addEventListener('mousemove', this.onMouseMove, false);
   }
 
   init() {
