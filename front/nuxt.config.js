@@ -16,6 +16,10 @@ export default {
     ]
   },
 
+  publicRuntimeConfig: {
+    myJWTToken: process.env.JWT_TOKEN,
+    API_URL: "http://109.11.150.151:8080/"
+  },
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [
     "assets/css/main.css"
@@ -37,8 +41,14 @@ export default {
 
   // Modules: https://go.nuxtjs.dev/config-modules
   modules: [
+    '@nuxtjs/axios',
   ],
-
+  axios: {
+    proxy: true // Can be also an object with default options
+  },
+  proxy: {
+    '/apiThingsBoard': { target: process.env.API_URL, pathRewrite: {'^/apiThingsBoard/': ''}},
+  },
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
     transpile: [

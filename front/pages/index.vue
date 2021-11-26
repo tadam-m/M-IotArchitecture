@@ -7,25 +7,21 @@
           </svg>
         </div>
         <div class="popup-header">
-            <div>
-              {{currentNameObject}}
-            </div>
-            <img>
+            <img src="../assets/icon/tips.png">
         </div>
         <div class="popup-body">
           <div id="body-on-off">
-            <input type="checkbox">
-            <span class="slider round"></span>
+            <p class="title-str">POWER :</p>
+            <Toggle :_val=currentLightToggle :_id=currentNameObject  v-on:toggleObject=toggleObject />
           </div>
           <div id="body-color">
-            <p class="title-str">Color</p>
+            <p class="title-str">COLOR :</p>
             <input type="color" id="color-light" name="head" 
               value="#e66465">
-           
           </div>
         </div>
         <div class="popup-footer">
-          <button v-on:click="popupUpdateLight">Update</button>
+          <button v-on:click="popupUpdateLight">UPDATE</button>
         </div>
       </div>
     </transition>
@@ -53,9 +49,21 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import Toggle from "~/components/Toggle.vue";
+import axios from "axios";
   
+interface lightObj {
+  light: THREE.PointLight;
+  bulb: any;
+  lightOn: boolean;
+  id: string;
+  deviceID: string;
+  plastic: string;
+}
+
+
 @Component
-export default  class Index extends Vue {
+export default class Index extends Vue {
   room: any = undefined;
   scene: any= undefined;
   camera: any = undefined;
@@ -64,18 +72,17 @@ export default  class Index extends Vue {
   controls: any = undefined;
   raycaster: any = undefined;
   mouse: any = undefined;
-  composer: any = undefined; 
+  composer: any = undefined;
   outlinePass: any = undefined;
   selectedObjects:any[] = [];
   currentNameObject :any = "";
+  iLight: any = 0;
+  lightArray: lightObj[] = [];
 
-  lightOffice: any= undefined;
-  lightEntrie: any= undefined;
-  lightKitchen: any= undefined;
-  lightToilet: any=undefined;
-  lightBedroom: any=undefined;
   
   popupAmpoule: any = false;
+
+  currentLightToggle = false;
 
   initObject() {
     this.scene = new THREE.Scene();
@@ -122,36 +129,36 @@ export default  class Index extends Vue {
     this.composer.addPass(effectFXAA);
   }
 
+  toggleObject(id:any, value:any) {
+    if (this.popupAmpoule) {
+      this.currentLightToggle = value;
+    }
+  }
+
   closePopupLight() {
     this.popupAmpoule = false;
   }
 
   loadModel() {
     this.loaderModel.load(
-      "Bedroom4.gltf",
+      "Bedroom5.gltf",
       (obj: any) => {
         this.room = obj.scene;
-        this.room.position.y = -5.5;
-        this.room.position.x = 0;
-        this.room.position.z = -15;
+        this.room.position.set(0, -5.5, -15);
         this.scene.add(this.room);
+        this.initLight();
         this.initCamera()
       },
-      (err2:any) =>{
-
-      },
+      (msg:any) =>{},
       (err:any) => {
-        console.error('An error happened');
-        console.error(err)
+        console.error('An error happened', err);
       }
     );
   }
 
 
   initCamera() {
-    this.camera.position.z = 2.56;
-    this.camera.position.y = 6.9;
-    this.camera.position.x = 9.9; 
+    this.camera.position.set(9.9, 6.9, 2.56);
     this.camera.zoom = 0.3;
     this.camera.lookAt(this.room.position);
     this.initOutline();
@@ -160,33 +167,35 @@ export default  class Index extends Vue {
   initLight() {
     const colorLightDefault = new THREE.Color(0x5D3FD3);
     const colorBackground = new THREE.Color(0x4B0082);
-    this.lightOffice = new THREE.PointLight(0x5D3FD3, 2, 200);
-    this.lightEntrie = new THREE.PointLight(0x5D3FD3, 2, 200);
-    this.lightKitchen = new THREE.PointLight(0x5D3FD3, 2, 200);
-    this.lightBedroom = new THREE.PointLight(0x5D3FD3, 2, 200);
-    this.lightToilet = new THREE.PointLight(0x5D3FD3, 2, 200);
+    const lightOffice = new THREE.PointLight(0x5D3FD3, 2, 200);
+    const lightEntrie = new THREE.PointLight(0x5D3FD3, 2, 200);
+    const lightKitchen = new THREE.PointLight(0x5D3FD3, 2, 200);
+    const lightBedroom = new THREE.PointLight(0x5D3FD3, 2, 200);
+    const lightToilet = new THREE.PointLight(0x5D3FD3, 2, 200);
 
-    this.lightOffice.position.set(6, -3, -16);
-    this.lightEntrie.position.set(6, -3, 0);
-    this.lightKitchen.position.set(6, -3, 16);
-    this.lightBedroom.position.set(-8, -3, 0);
-    this.lightToilet.position.set(-12, -3, 18);
+    lightOffice.position.set(6, -3, -16);
+    lightEntrie.position.set(6, -3, 0);
+    lightKitchen.position.set(6, -3, 16);
+    lightBedroom.position.set(-8, -3, 0);
+    lightToilet.position.set(-12, -3, 18);
 
+    this.lightArray.push({light: lightEntrie, id: 'AmpouleEntrie', lightOn: true, bulb : this.scene.getObjectByName("AmpouleEntrie"), deviceID:"fb14bfa0-484f-11ec-b397-151de65dccd2", plastic:"LampEntrie"})
+    this.lightArray.push({light: lightBedroom, id: 'AmpouleBedroom', lightOn: true, bulb : this.scene.getObjectByName("AmpouleBedroom"), deviceID:"5c3f18c0-4e72-11ec-b397-151de65dccd2", plastic:"LampBedroom"})
+    this.lightArray.push({light: lightOffice, id: 'AmpouleOffice', lightOn: true, bulb : this.scene.getObjectByName("AmpouleOffice"), deviceID:"76ae1080-4e72-11ec-b397-151de65dccd2", plastic:"LampOffice"})
+    this.lightArray.push({light: lightKitchen, id: 'AmpouleKitchen', lightOn: true, bulb : this.scene.getObjectByName("AmpouleKitchen"), deviceID:"8b500c00-4e72-11ec-b397-151de65dccd2", plastic:"LampKitchen"})
+    this.lightArray.push({light: lightToilet, id: 'AmpouleToilet', lightOn: true, bulb : this.scene.getObjectByName("AmpouleToilet"), deviceID:"a8e85740-4e72-11ec-b397-151de65dccd2", plastic:"LampToilet"})
+    
     this.scene.background = colorBackground;
-    this.scene.add(this.lightOffice);
-    this.scene.add(this.lightEntrie);
-    this.scene.add(this.lightKitchen);
-    this.scene.add(this.lightBedroom);
-    this.scene.add(this.lightToilet);
+    this.scene.add(lightOffice);
+    this.scene.add(lightEntrie);
+    this.scene.add(lightKitchen);
+    this.scene.add(lightBedroom);
+    this.scene.add(lightToilet);
   }
 
   animate() {
     requestAnimationFrame(this.animate);
-    if (this.room) {
-      //this.room.rotation.y += 0.001;
-    }
     this.controls.update();
-    //this.renderer.render(this.scene, this.camera);
     this.composer.render();
   }
 
@@ -198,43 +207,64 @@ export default  class Index extends Vue {
   }
 
   checkIntersectedObjet(name:any) {
-    const ampoules = ["AmpouleEntrie", "AmpouleToilet", "AmpouleOffice", "AmpouleKitchen",
-     "AmpouleBedroom"]
-    
-    if (ampoules.includes(name)) {
-      this.openPopupAmpoule(name);
+    if (this.popupAmpoule === true) return;
+
+    for (let i = 0; i < this.lightArray.length; i += 1) {
+      if (this.lightArray[i].id === name || this.lightArray[i].plastic === name) {
+        this.iLight = i;
+        this.openPopupAmpoule(name);
+      }
     }
+    console.log(name);
   }
 
   openPopupAmpoule(name: any) {
     if (this.popupAmpoule === true) return;
-    let colorPicker = (<HTMLInputElement>document.getElementById("color-light"));
 
-    console.log("Intersect", name);
     this.popupAmpoule = true;
     this.currentNameObject = name;
+    this.currentLightToggle = this.lightArray[this.iLight].lightOn;
   }
 
   popupUpdateLight() {
-    let popup = document.getElementById("popup-ampoule");
-    let light = this.scene.getObjectByName(this.currentNameObject);
-
     let colorPicker = (<HTMLInputElement>document.getElementById("color-light"));
     let valuePicker = parseInt(colorPicker?.value.replace('#', '0x'), 16);
 
-    if (this.currentNameObject === "AmpouleEntrie") {
-      this.lightEntrie.color.setHex(valuePicker);
-    } else if (this.currentNameObject === "AmpouleToilet") {
-      this.lightToilet.color.setHex(valuePicker);
-    } else if (this.currentNameObject === "AmpouleOffice") {
-      this.lightOffice.color.setHex(valuePicker);
-    } else if (this.currentNameObject === "AmpouleKitchen") {
-      this.lightKitchen.color.setHex(valuePicker);
-    } else if (this.currentNameObject === "AmpouleBedroom") {
-      this.lightBedroom.color.setHex(valuePicker);
-    }
-    light.material.color.set(valuePicker);
+    this.lightArray[this.iLight].bulb.material.color.set(valuePicker);
+    this.lightArray[this.iLight].light.color.setHex(valuePicker);
+    this.lightArray[this.iLight].lightOn = this.currentLightToggle; 
     this.popupAmpoule = false;
+    this.powerLight(
+      this.lightArray[this.iLight].light,
+      this.lightArray[this.iLight].lightOn,
+      this.lightArray[this.iLight].bulb,
+      3);
+    //Send Request
+    this.sendTelemetry();
+  }
+
+  async sendTelemetry() {
+    let config = {
+      headers: {
+        "X-Authorization": this.$config.myJWTToken,
+      }
+    }
+    let data = {
+      "power": this.lightArray[this.iLight].lightOn,
+    }
+    console.log(this.$config.myJWTToken);
+    axios.post(this.$config.API_URL + 'api/plugins/telemetry/DEVICE/' + this.lightArray[this.iLight].deviceID + '/timeseries/ANY',data, config).then((res) => {
+      console.log(res);
+    })
+  }
+
+  powerLight(obj: any, val: boolean, light:any, intensity: number) {
+    if (val == false) {
+      obj.intensity = 0;
+      light.material.color.set(0x000000);
+    }
+    else
+      obj.intensity = intensity;
   }
 
   debugObject(obj: any, str:any, keyCode: any) {
@@ -243,16 +273,16 @@ export default  class Index extends Vue {
     console.log("y", obj.position.y);
     console.log("z", obj.position.z);
     if (keyCode == 38) {
-          obj.position.x += 2;
-        } else if (keyCode == 40) {
-            obj.position.x -= 2;
-        } else if (keyCode == 37) {
-            obj.position.z -= 2;
-        } else if (keyCode == 39) {
-            obj.position.z += 2;
-        } else if (keyCode == 78) {
-           obj.position.set(0, 0, 0);
-        }
+      obj.position.x += 2;
+    } else if (keyCode == 40) {
+      obj.position.x -= 2;
+    } else if (keyCode == 37) {
+      obj.position.z -= 2;
+    } else if (keyCode == 39) {
+      obj.position.z += 2;
+    } else if (keyCode == 78) {
+      obj.position.set(0, 0, 0);
+    }
   }
 
   addSelectedObject(object: any) {
@@ -264,12 +294,11 @@ export default  class Index extends Vue {
 	  this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
 	  this.mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
     this.checkIntersection();
-   // console.log("Mouse = ", this.mouse);
   }
 
   checkIntersection() {
     this.raycaster.setFromCamera(this.mouse, this.camera);
-    const intersects = this.raycaster.intersectObject(this.scene, true );
+    const intersects = this.raycaster.intersectObject(this.scene, true);
     if (!this.outlinePass) return;
     if (intersects.length > 0) {
       const selectedObject = intersects[0].object;
@@ -279,13 +308,11 @@ export default  class Index extends Vue {
     } else {
       this.outlinePass.selectedObjects = [];
     }
-
   }
 
   mounted() {
     this.initObject();
     this.loadModel();
-    this.initLight();
     this.animate();
     this.listenKeyboard();
     window.addEventListener('mousemove', this.onMouseMove, false );
@@ -300,6 +327,8 @@ export default  class Index extends Vue {
   * {
     margin: 0;
     padding: 0;
+    font-family: 'Cyber';
+    font-size: 30px;
   }
 
   #popup-ampoule {
@@ -319,8 +348,8 @@ export default  class Index extends Vue {
           fill: hotpink;
         }
         .svg-icon {
-          width: 25px;
-          height: 25px;
+          width: 35px;
+          height: 35px;
           transition: 0.5s;
           fill: inherit;
           path {
@@ -335,6 +364,9 @@ export default  class Index extends Vue {
       flex-direction: column;
       justify-content: center;
       align-items: center;
+      img {
+        width: 80px;
+      }
     }
     .popup-body {
       margin-top: 40px;
@@ -343,14 +375,22 @@ export default  class Index extends Vue {
         flex-direction: row;
         justify-content: left;
         align-items: center;
+        color: rgb(13, 92, 196);
+        .title-str {
+          margin-right: 20px;
+        }
       }
       #body-color {
         display: flex;
         flex-direction: row;
         justify-content: left;
         align-items: center;
+        color: rgb(13, 196, 150);
         .title-str {
           margin-right: 20px;
+        }
+        input {
+          border: none;
         }
       }
     }
@@ -359,18 +399,15 @@ export default  class Index extends Vue {
         display: flex;
         justify-content: center;
         align-items: center;
-        button {
-        }
     }
   }
 
-  .fade-enter-to, .fade-leave-active {
-    opacity: 100;
-  }
-  .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-    opacity: 0;
-    transition: opacity 1.5s all;
-  }
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
 
 
 </style>
