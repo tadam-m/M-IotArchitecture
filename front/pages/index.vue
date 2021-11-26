@@ -96,10 +96,11 @@ export default class Index extends Vue {
     const pmremGenerator = new THREE.PMREMGenerator(this.renderer);
 
     this.controls.target.set( 0, 2, 0 );
-    this.controls.update();
+    this.controls.maxPolarAngle = Math.PI / 2;
     this.controls.enablePan = false;
 		this.controls.enableDamping = true;
-    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    //this.controls.update();
+    //this.renderer.outputEncoding = THREE.sRGBEncoding;
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
     document.body.appendChild(this.renderer.domElement);
@@ -141,6 +142,7 @@ export default class Index extends Vue {
 
   closePopupLight() {
     this.popupAmpoule = false;
+    this.selectedObjects = [];
   }
 
   loadModel() {
@@ -189,8 +191,17 @@ export default class Index extends Vue {
     this.lightArray.push({light: lightKitchen, id: 'AmpouleKitchen', lightOn: true, bulb : this.scene.getObjectByName("AmpouleKitchen"), deviceID:"8b500c00-4e72-11ec-b397-151de65dccd2", plastic:"LampKitchen"})
     this.lightArray.push({light: lightToilet, id: 'AmpouleToilet', lightOn: true, bulb : this.scene.getObjectByName("AmpouleToilet"), deviceID:"a8e85740-4e72-11ec-b397-151de65dccd2", plastic:"LampToilet"})
     
-    this.scene.background = colorBackground;
-    this.scene.add(lightOffice);
+    this.scene.background = new THREE.CubeTextureLoader()
+    .setPath( '/' )
+    .load( [
+      'skybox-px.png',
+      'skybox-nx.png',
+      'skybox-py.png',
+      'skybox-ny.png',
+      'skybox-pz.png',
+      'skybox-nz.png'
+    ] );
+      this.scene.add(lightOffice);
     this.scene.add(lightEntrie);
     this.scene.add(lightKitchen);
     this.scene.add(lightBedroom);
@@ -201,13 +212,6 @@ export default class Index extends Vue {
     requestAnimationFrame(this.animate);
     this.controls.update();
     this.composer.render();
-  }
-
-  listenKeyboard() {
-    document.addEventListener("keydown", (event) => {
-      var keyCode = event.which;
-      //this.debugObject(this.lightOffice, "camera", keyCode);
-    }, false);
   }
 
   checkIntersectedObjet(name:any) {
@@ -271,22 +275,32 @@ export default class Index extends Vue {
       obj.intensity = intensity;
   }
 
+  listenKeyboard() {
+    document.addEventListener("keydown", (event) => {
+      var keyCode = event.key;
+      console.log(keyCode);
+      //this.debugObject(this.controls.target, "camera", keyCode);
+    }, false);
+  }
+
   debugObject(obj: any, str:any, keyCode: any) {
     console.log(str);
-    console.log("x", obj.position.x);
-    console.log("y", obj.position.y);
-    console.log("z", obj.position.z);
-    if (keyCode == 38) {
-      obj.position.x += 2;
-    } else if (keyCode == 40) {
-      obj.position.x -= 2;
-    } else if (keyCode == 37) {
-      obj.position.z -= 2;
-    } else if (keyCode == 39) {
-      obj.position.z += 2;
-    } else if (keyCode == 78) {
-      obj.position.set(0, 0, 0);
-    }
+    console.log("x", obj.x);
+    console.log("y", obj.y);
+    console.log("z", obj.z);
+    if (keyCode == "ArrowUp") {
+      obj.x += 2;
+    } else if (keyCode == "ArrowDown") {
+      obj.x -= 2;
+    } else if (keyCode == "ArrowLeft") {
+      obj.z -= 2;
+    } else if (keyCode == "ArrowRight") {
+      obj.z += 2;
+    } else if (keyCode == "z") {
+      obj.y -= 2;
+    } else if (keyCode == "s") {
+      obj.y += 2;
+    } 
   }
 
   addSelectedObject(object: any) {
@@ -340,9 +354,15 @@ export default class Index extends Vue {
     padding: 20px;
     top:25%;
     background: white;
-    border-radius: 4px;
+    border-radius: 5px;
     min-width: 200px;
     min-height: 300px;
+    -webkit-animation: fadein 1s; /* Safari, Chrome and Opera > 12.1 */
+       -moz-animation: fadein 1s; /* Firefox < 16 */
+        -ms-animation: fadein 1s; /* Internet Explorer */
+         -o-animation: fadein 1s; /* Opera < 12.1 */
+            animation: fadein 1s;
+
     #light-icon-close {
         position: absolute;
         right: 10px;
@@ -412,5 +432,15 @@ export default class Index extends Vue {
   opacity: 0;
 }
 
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Firefox < 16 */
+@-moz-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
 
 </style>
