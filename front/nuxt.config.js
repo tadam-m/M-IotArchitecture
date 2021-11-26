@@ -43,12 +43,6 @@ export default {
   modules: [
     '@nuxtjs/axios',
   ],
-  axios: {
-    proxy: true // Can be also an object with default options
-  },
-  proxy: {
-    '/apiThingsBoard': { target: process.env.API_URL, pathRewrite: {'^/apiThingsBoard/': ''}},
-  },
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
     transpile: [
