@@ -20,6 +20,18 @@ services:
       - .tb-gateway/config:/thingsboard_gateway/config
       - .tb-gateway/logs:/thingsboard_gateway/logs
       - .tb-gateway/extensions:/thingsboard_gateway/extensions
+  my-mqtt:
+    container_name: my-mqtt
+    restart: always
+    image: eclipse-mosquitto
+    volumes:
+      - .mosquitto/config:/mosquitto/config
+      - .mosquitto/data:/mosquitto/data
+      - .mosquitto/log:/mosquitto/log
+    ports:
+      - 1881:1881
+      - 9001:9001
+
 volumes:
   mytb-data:
     external: true
