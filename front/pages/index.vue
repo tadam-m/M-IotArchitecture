@@ -171,7 +171,12 @@ export default class Index extends Vue {
         this.initLight();
         this.initTemp();
         this.initInk();
-        this.initCamera()
+        this.initCamera();
+        setInterval(() => {
+          this.sendTelemetryLight();
+          this.sendTelemetryInk();
+          this.sendTelemetryTemp();
+        }, 5 * 1000)
       },
       (msg:any) =>{},
       (err:any) => {
@@ -302,7 +307,7 @@ export default class Index extends Vue {
       this.lightArray[this.iLight].bulb,
       this.lightArray[this.iLight].intensity);
     //Send Request
-    this.sendTelemetry();
+    //this.sendTelemetry();
   }
 
   popupUpdateTemp(temperature: number, humidity: number) {
@@ -319,25 +324,72 @@ export default class Index extends Vue {
     this.closePopup();
   }
 
-  async sendTelemetry() {
+  async sendTelemetryLight() {
     let config = {
       headers: {
         "X-Authorization": this.$config.myJWTToken,
       }
     }
-    let data = {
-      "power": this.lightArray[this.iLight].lightOn,
+    for (let i = 0; i < this.lightArray.length; i ++) {
+      let data = {
+        "power": this.lightArray[i].lightOn,
+      }
+      axios.post(
+          this.$config.API_URL + 
+          'api/plugins/telemetry/DEVICE/' +
+          this.lightArray[i].deviceID +
+          '/timeseries/ANY?scope=ANY',data, config).then((res) => {
+          console.log(res);
+      }).catch((e) => {
+        //console.log(e);
+      })
     }
-    console.log(this.$config.myJWTToken);
-    axios.post(
-        this.$config.API_URL + 
-        'api/plugins/telemetry/DEVICE/' +
-        this.lightArray[this.iLight].deviceID +
-        '/timeseries/ANY',data, config).then((res) => {
-        console.log(res);
-    }).catch((e) => {
-      //console.log(e);
-    })
+  }
+
+  async sendTelemetryInk() {
+    let config = {
+      headers: {
+        "X-Authorization": this.$config.myJWTToken,
+      }
+    }
+    for (let i = 0; i < this.inkArray.length; i ++) {
+      let data = {
+        "fluid": this.inkArray[i].fluid,
+        "fluidMax": this.inkArray[i].fluidMax,
+      }
+      axios.post(
+          this.$config.API_URL + 
+          'api/plugins/telemetry/DEVICE/' +
+          this.inkArray[i].deviceID +
+          '/timeseries/ANY',data, config).then((res) => {
+          console.log(res);
+      }).catch((e) => {
+        //console.log(e);
+      })
+    }
+  }
+
+  async sendTelemetryTemp() {
+    let config = {
+      headers: {
+        "X-Authorization": this.$config.myJWTToken,
+      }
+    }
+    for (let i = 0; i < this.tempArray.length; i ++) {
+      let data = {
+        "temp": this.tempArray[i].temperature,
+        "humidity": this.tempArray[i].humidity,
+      }
+      axios.post(
+          this.$config.API_URL + 
+          'api/plugins/telemetry/DEVICE/' +
+          this.tempArray[i].deviceID +
+          '/timeseries/ANY',data, config).then((res) => {
+          console.log(res);
+      }).catch((e) => {
+        //console.log(e);
+      })
+    }
   }
 
   powerLight(obj: any, val: boolean, light:any, intensity: number) {
@@ -432,6 +484,7 @@ export default class Index extends Vue {
     document.body.addEventListener('click', () => {
       if (this.selectedObjects.length > 0) this.checkIntersectedObjet(this.selectedObjects[0].name)
     })
+    
   }
  }
 </script>
