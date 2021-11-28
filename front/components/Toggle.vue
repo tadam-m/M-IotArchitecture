@@ -52,7 +52,7 @@ import {
 } from "nuxt-property-decorator"
 
 @Component
-export default  class Toggle extends Vue {
+export default class Toggle extends Vue {
     @Prop({default: false}) _val!: Boolean;
     @Prop({default: ""}) _id!: String;
     _valueToggle : any = false;
@@ -62,18 +62,11 @@ export default  class Toggle extends Vue {
         this.$emit("toggleObject", this._id, this._valueToggle);
     }
 
-    @Watch('_valueToggle')
-    @Emit()
-    toggleObject(id:any, value:any) {
-    }
-
     mounted() {
         this._valueToggle = this._val;
         let obj = (<HTMLInputElement>document.getElementById("tog1"));
         
-        if (obj) {
-            obj.checked = this._valueToggle;
-        }
+        if (obj) obj.checked = this._valueToggle;
     }
 }
 </script>

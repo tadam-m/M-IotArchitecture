@@ -1,30 +1,19 @@
 <template>
-    <transition name="fade">
-      <div id="popup-ampoule" v-if="popupAmpoule">
-        <div id="light-icon-close" v-on:click="closePopupLight">
-          <svg class="svg-icon" viewBox="0 0 20 20">
-            <path d="M14.776,10c0,0.239-0.195,0.434-0.435,0.434H5.658c-0.239,0-0.434-0.195-0.434-0.434s0.195-0.434,0.434-0.434h8.684C14.581,9.566,14.776,9.762,14.776,10 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.691-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.382,10c0-4.071-3.312-7.381-7.382-7.381C5.929,2.619,2.619,5.93,2.619,10c0,4.07,3.311,7.382,7.381,7.382C14.07,17.383,17.382,14.07,17.382,10"></path>
-          </svg>
-        </div>
-        <div class="popup-header">
-            <img src="../assets/icon/tips.png">
-        </div>
-        <div class="popup-body">
-          <div id="body-on-off">
-            <p class="title-str">POWER :</p>
-            <Toggle :_val=currentLightToggle :_id=currentNameObject  v-on:toggleObject=toggleObject />
-          </div>
-          <div id="body-color">
-            <p class="title-str">COLOR :</p>
-            <input type="color" id="color-light" name="head" 
-              value="#e66465">
-          </div>
-        </div>
-        <div class="popup-footer">
-          <button v-on:click="popupUpdateLight">UPDATE</button>
-        </div>
-      </div>
-    </transition>
+    <div>
+      <PopupLight  v-if="popupAmpoule" 
+      :_currentLightToggle=lightArray[iLight].lightOn 
+      :_currentNameObject=lightArray[iLight].id
+      :_color=lightArray[iLight].color
+      :_intensity=lightArray[iLight].intensity
+      v-on:popupUpdateLight=popupUpdateLight
+      v-on:toggleObject=toggleObject
+      v-on:closePopup=closePopup
+      />
+
+      <PopupInk v-if="popupInk" v-on:closePopup=closePopup />
+      <PopupTemp v-if="popupTemp" v-on:closePopup=closePopup />
+    </div>
+      
 </template>
 
 <script lang="ts">
@@ -51,6 +40,8 @@ import { LuminosityShader } from 'three/examples/jsm/shaders/LuminosityShader.js
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import Toggle from "~/components/Toggle.vue";
 import axios from "axios";
+import PopupLight from "~/components/PopupLight.vue";
+import PopupInk from "../components/PopupInk.vue";
   
 interface lightObj {
   light: THREE.PointLight;
@@ -59,6 +50,26 @@ interface lightObj {
   id: string;
   deviceID: string;
   plastic: string;
+  color: string;
+  intensity: number;
+}
+
+interface tempObj {
+  obj: any;
+  temperature: number;
+  deviceID: string;
+  humidity: number;
+  id: string;
+}
+
+interface inkObj {
+  obj: any;
+  ink: string;
+  deviceID: string;
+  substance: string;
+  id: string;
+  fluidMax: number;
+  fluid: number;
 }
 
 
@@ -75,14 +86,13 @@ export default class Index extends Vue {
   composer: any = undefined;
   outlinePass: any = undefined;
   selectedObjects:any[] = [];
-  currentNameObject :any = "";
-  iLight: any = 0;
+  iLight:number = 0;
   lightArray: lightObj[] = [];
-
-  
-  popupAmpoule: any = false;
-
-  currentLightToggle = false;
+  tempArray: tempObj[] = [];
+  inkArray: inkObj[] = [];
+  popupAmpoule: boolean = false;
+  popupInk: boolean = false;
+  popupTemp: boolean = false;
 
   initObject() {
     this.scene = new THREE.Scene();
@@ -104,10 +114,6 @@ export default class Index extends Vue {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04 ).texture;
     document.body.appendChild(this.renderer.domElement);
-    document.body.addEventListener('click', () => {
-      if (this.selectedObjects.length > 0)
-        this.checkIntersectedObjet(this.selectedObjects[0].name)
-    })
   }
 
   initOutline() {
@@ -135,24 +141,26 @@ export default class Index extends Vue {
   }
 
   toggleObject(id:any, value:any) {
-    if (this.popupAmpoule) {
-      this.currentLightToggle = value;
-    }
+    if (this.popupAmpoule) this.lightArray[this.iLight].lightOn = value;
   }
 
-  closePopupLight() {
+  closePopup() {
     this.popupAmpoule = false;
+    this.popupInk = false;
+    this.popupTemp = false;
     this.selectedObjects = [];
   }
 
   loadModel() {
     this.loaderModel.load(
-      "Bedroom5.gltf",
+      "Bedroom6.gltf",
       (obj: any) => {
         this.room = obj.scene;
         this.room.position.set(0, -5.5, -15);
         this.scene.add(this.room);
         this.initLight();
+        this.initTemp();
+        this.initInk();
         this.initCamera()
       },
       (msg:any) =>{},
@@ -185,11 +193,11 @@ export default class Index extends Vue {
     lightBedroom.position.set(-8, -3, 0);
     lightToilet.position.set(-12, -3, 18);
 
-    this.lightArray.push({light: lightEntrie, id: 'AmpouleEntrie', lightOn: true, bulb : this.scene.getObjectByName("AmpouleEntrie"), deviceID:"fb14bfa0-484f-11ec-b397-151de65dccd2", plastic:"LampEntrie"})
-    this.lightArray.push({light: lightBedroom, id: 'AmpouleBedroom', lightOn: true, bulb : this.scene.getObjectByName("AmpouleBedroom"), deviceID:"5c3f18c0-4e72-11ec-b397-151de65dccd2", plastic:"LampBedroom"})
-    this.lightArray.push({light: lightOffice, id: 'AmpouleOffice', lightOn: true, bulb : this.scene.getObjectByName("AmpouleOffice"), deviceID:"76ae1080-4e72-11ec-b397-151de65dccd2", plastic:"LampOffice"})
-    this.lightArray.push({light: lightKitchen, id: 'AmpouleKitchen', lightOn: true, bulb : this.scene.getObjectByName("AmpouleKitchen"), deviceID:"8b500c00-4e72-11ec-b397-151de65dccd2", plastic:"LampKitchen"})
-    this.lightArray.push({light: lightToilet, id: 'AmpouleToilet', lightOn: true, bulb : this.scene.getObjectByName("AmpouleToilet"), deviceID:"a8e85740-4e72-11ec-b397-151de65dccd2", plastic:"LampToilet"})
+    this.lightArray.push({light: lightEntrie, id: 'AmpouleEntrie', lightOn: true, bulb : this.scene.getObjectByName("AmpouleEntrie"), deviceID:"fb14bfa0-484f-11ec-b397-151de65dccd2", plastic:"LampEntrie", color:"#ffffff", intensity: 2})
+    this.lightArray.push({light: lightBedroom, id: 'AmpouleBedroom', lightOn: true, bulb : this.scene.getObjectByName("AmpouleBedroom"), deviceID:"5c3f18c0-4e72-11ec-b397-151de65dccd2", plastic:"LampBedroom", color:"#ffffff", intensity: 2})
+    this.lightArray.push({light: lightOffice, id: 'AmpouleOffice', lightOn: true, bulb : this.scene.getObjectByName("AmpouleOffice"), deviceID:"76ae1080-4e72-11ec-b397-151de65dccd2", plastic:"LampOffice", color:"#ffffff", intensity: 2})
+    this.lightArray.push({light: lightKitchen, id: 'AmpouleKitchen', lightOn: true, bulb : this.scene.getObjectByName("AmpouleKitchen"), deviceID:"8b500c00-4e72-11ec-b397-151de65dccd2", plastic:"LampKitchen", color:"#ffffff", intensity: 2})
+    this.lightArray.push({light: lightToilet, id: 'AmpouleToilet', lightOn: true, bulb : this.scene.getObjectByName("AmpouleToilet"), deviceID:"a8e85740-4e72-11ec-b397-151de65dccd2", plastic:"LampToilet",color:"#ffffff", intensity: 2})
     
     this.scene.background = new THREE.CubeTextureLoader()
     .setPath( '/' )
@@ -208,6 +216,18 @@ export default class Index extends Vue {
     this.scene.add(lightToilet);
   }
 
+  initTemp() {
+    this.tempArray.push({id:'TempEntrie', obj:this.scene.getObjectByName("TempEntrie"), temperature:0, humidity: 0, deviceID: '3ab66a70-5028-11ec-88eb-1d273089bfd9'});
+    this.tempArray.push({id:'TempOutside', obj:this.scene.getObjectByName("TempOutside"), temperature:0, humidity: 0, deviceID: '49a84080-5028-11ec-88eb-1d273089bfd9'});
+    this.tempArray.push({id:'TempBedroom', obj:this.scene.getObjectByName("TempBedroom"), temperature:0, humidity: 0, deviceID: '5371e5d0-5028-11ec-88eb-1d273089bfd9'});
+  }
+
+  initInk() {
+    this.inkArray.push({id:'InkToilet', deviceID:'38ea4080-5029-11ec-88eb-1d273089bfd9', obj:this.scene.getObjectByName("inkToilet"),  substance:'HandWash', ink: 'Blue', fluidMax: 100, fluid: 60})
+    this.inkArray.push({id:'InkOffice', deviceID:'45abc910-5029-11ec-88eb-1d273089bfd9', obj:this.scene.getObjectByName("InkOffice"),  substance:'Cream', ink: 'White', fluidMax: 100, fluid: 20})
+    this.inkArray.push({id:'InkKitchen', deviceID:'4c61ecd0-5029-11ec-88eb-1d273089bfd9', obj:this.scene.getObjectByName("InkKitchen"),  substance:'Soda', ink: 'Orange', fluidMax: 100, fluid: 40})
+  }
+
   animate() {
     requestAnimationFrame(this.animate);
     this.controls.update();
@@ -223,30 +243,48 @@ export default class Index extends Vue {
         this.openPopupAmpoule(name);
       }
     }
+    for (let i = 0; i < this.inkArray.length; i += 1) {
+      if (this.inkArray[i].id === name) {
+        this.iLight = i;
+        this.openPopupInk(name);
+      }
+    }
+    for (let i = 0; i < this.tempArray.length; i += 1) {
+      if (this.tempArray[i].id === name) {
+        this.iLight = i;
+        this.openPopupTemp(name);
+      }
+    }
     console.log(name);
   }
 
   openPopupAmpoule(name: any) {
     if (this.popupAmpoule === true) return;
-
     this.popupAmpoule = true;
-    this.currentNameObject = name;
-    this.currentLightToggle = this.lightArray[this.iLight].lightOn;
+  }
+  openPopupInk(name: any) {
+    if (this.popupInk === true) return;
+    this.popupInk = true;
+  }
+  openPopupTemp(name: any) {
+    if (this.popupTemp === true) return;
+    this.popupTemp = true;
   }
 
-  popupUpdateLight() {
+  popupUpdateLight(toggled:boolean, intensity: number) {
     let colorPicker = (<HTMLInputElement>document.getElementById("color-light"));
     let valuePicker = parseInt(colorPicker?.value.replace('#', '0x'), 16);
 
+    this.lightArray[this.iLight].intensity = intensity;
+    this.lightArray[this.iLight].color = colorPicker?.value;
     this.lightArray[this.iLight].bulb.material.color.set(valuePicker);
     this.lightArray[this.iLight].light.color.setHex(valuePicker);
-    this.lightArray[this.iLight].lightOn = this.currentLightToggle; 
     this.popupAmpoule = false;
     this.powerLight(
       this.lightArray[this.iLight].light,
       this.lightArray[this.iLight].lightOn,
       this.lightArray[this.iLight].bulb,
-      3);
+      this.lightArray[this.iLight].intensity);
     //Send Request
     this.sendTelemetry();
   }
@@ -261,8 +299,14 @@ export default class Index extends Vue {
       "power": this.lightArray[this.iLight].lightOn,
     }
     console.log(this.$config.myJWTToken);
-    axios.post(this.$config.API_URL + 'api/plugins/telemetry/DEVICE/' + this.lightArray[this.iLight].deviceID + '/timeseries/ANY',data, config).then((res) => {
-      console.log(res);
+    axios.post(
+        this.$config.API_URL + 
+        'api/plugins/telemetry/DEVICE/' +
+        this.lightArray[this.iLight].deviceID +
+        '/timeseries/ANY',data, config).then((res) => {
+        console.log(res);
+    }).catch((e) => {
+      //console.log(e);
     })
   }
 
@@ -271,15 +315,14 @@ export default class Index extends Vue {
       obj.intensity = 0;
       light.material.color.set(0x000000);
     }
-    else
+    else {
       obj.intensity = intensity;
+    }
   }
 
   listenKeyboard() {
     document.addEventListener("keydown", (event) => {
-      var keyCode = event.key;
-      console.log(keyCode);
-      //this.debugObject(this.controls.target, "camera", keyCode);
+      //this.debugObject(this.controls.target, "camera", event.key;);
     }, false);
   }
 
@@ -321,10 +364,33 @@ export default class Index extends Vue {
     if (intersects.length > 0) {
       const selectedObject = intersects[0].object;
       this.addSelectedObject(selectedObject);
-      this.outlinePass.selectedObjects = this.selectedObjects;
+      if (this.checkSensor(selectedObject.name))
+        this.outlinePass.selectedObjects = this.selectedObjects;
+      else {
+        this.outlinePass.selectedObjects = [];
+      }
     } else {
       this.outlinePass.selectedObjects = [];
     }
+  }
+
+  checkSensor(name: string) {
+    for (let i = 0; i < this.lightArray.length; i += 1) {
+      if (this.lightArray[i].id === name || this.lightArray[i].plastic === name) {
+        return true;
+      }
+    }
+    for (let i = 0; i < this.inkArray.length; i += 1) {
+      if (this.inkArray[i].id === name) {
+        return true;
+      }
+    }
+    for (let i = 0; i < this.tempArray.length; i += 1) {
+      if (this.tempArray[i].id === name) {
+        return true;
+      }
+    }
+    return false;
   }
 
   mounted() {
@@ -333,9 +399,9 @@ export default class Index extends Vue {
     this.animate();
     this.listenKeyboard();
     window.addEventListener('mousemove', this.onMouseMove, false);
-  }
-
-  init() {
+    document.body.addEventListener('click', () => {
+      if (this.selectedObjects.length > 0) this.checkIntersectedObjet(this.selectedObjects[0].name)
+    })
   }
  }
 </script>
@@ -347,100 +413,5 @@ export default class Index extends Vue {
     font-family: 'Cyber';
     font-size: 30px;
   }
-
-  #popup-ampoule {
-    position: absolute;
-    left:10%;
-    padding: 20px;
-    top:25%;
-    background: white;
-    border-radius: 5px;
-    min-width: 200px;
-    min-height: 300px;
-    -webkit-animation: fadein 1s; /* Safari, Chrome and Opera > 12.1 */
-       -moz-animation: fadein 1s; /* Firefox < 16 */
-        -ms-animation: fadein 1s; /* Internet Explorer */
-         -o-animation: fadein 1s; /* Opera < 12.1 */
-            animation: fadein 1s;
-
-    #light-icon-close {
-        position: absolute;
-        right: 10px;
-        top: 10px;
-        &:hover {
-          fill: hotpink;
-        }
-        .svg-icon {
-          width: 35px;
-          height: 35px;
-          transition: 0.5s;
-          fill: inherit;
-          path {
-            fill: inherit;
-          }
-        }
-    }
-    .popup-header {
-      margin-top: 20px;
-      position:relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      img {
-        width: 80px;
-      }
-    }
-    .popup-body {
-      margin-top: 40px;
-      #body-on-off {
-        display: flex;
-        flex-direction: row;
-        justify-content: left;
-        align-items: center;
-        color: rgb(13, 92, 196);
-        .title-str {
-          margin-right: 20px;
-        }
-      }
-      #body-color {
-        display: flex;
-        flex-direction: row;
-        justify-content: left;
-        align-items: center;
-        color: rgb(13, 196, 150);
-        .title-str {
-          margin-right: 20px;
-        }
-        input {
-          border: none;
-        }
-      }
-    }
-    .popup-footer {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-  }
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity .5s;
-}
-.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
-}
-
-@keyframes fadein {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
-
-/* Firefox < 16 */
-@-moz-keyframes fadein {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-}
 
 </style>
