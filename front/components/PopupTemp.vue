@@ -17,6 +17,14 @@
             <p class="title-str">HUMIDITY :</p>
             <input type="number" id="humidty-input" name="head" :value=_humidity>
           </div>
+          <div id="body-longitude">
+            <p class="title-str">LONGITUDE :</p>
+            <input type="text" id="longitude-input" name="head" :value=_longitude>
+          </div>
+          <div id="body-latitude">
+            <p class="title-str">LATITUDE :</p>
+            <input type="text" id="latitude-input" name="head" :value=_latitude>
+          </div>
         </div>
         <div class="popup-footer">
           <button v-on:click="popupUpdateTemp">UPDATE</button>
@@ -40,15 +48,23 @@ import {
 export default class PopupTemp extends Vue {
     @Prop({default: 0}) _temperature! : number;
     @Prop({default: 0}) _humidity! : number;
-    
+    @Prop({default: 0}) _latitude!: number;
+    @Prop({default: 0}) _longitude!: number;
+
     temperature: number = 0;
     humidity: number = 0;
+    longitude: number = 0;
+    latitdue: number = 0;
 
     popupUpdateTemp() {
         let temperature = (<HTMLInputElement>document.getElementById("temperature-input"));
         let humidity = (<HTMLInputElement>document.getElementById("humidty-input"));
-        
+        let longitude = (<HTMLInputElement>document.getElementById("longitude-input"));
+        let latitude = (<HTMLInputElement>document.getElementById("latitude-input"));
+
         try {
+            this.longitude = parseFloat(longitude.value);
+            this.latitdue = parseFloat(latitude.value);
             this.temperature = parseInt(temperature.value, 10);
             this.humidity = parseInt(humidity.value, 10);
         } catch(e) {
@@ -56,7 +72,7 @@ export default class PopupTemp extends Vue {
             this.temperature = -42;
             this.humidity = -42;
         }
-        this.$emit("popupUpdateTemp", this.temperature, this.humidity);
+        this.$emit("popupUpdateTemp", this.temperature, this.humidity, this.longitude, this.latitdue);
     }
 
     toggleObject(id:any, val: any) {
@@ -70,6 +86,8 @@ export default class PopupTemp extends Vue {
     mounted() {
         this.temperature = this._temperature;
         this.humidity = this._humidity;
+        this.longitude = this._longitude;
+        this.latitdue = this._latitude;
     }
 }
 </script>
@@ -156,6 +174,20 @@ export default class PopupTemp extends Vue {
             }
           input {
               max-width: 40px;
+              font-size: 18px;
+          }
+      }
+      #body-latitude, #body-longitude {
+          display: flex;
+          flex-direction: row;
+          justify-content: left;
+          align-items: center;
+          .title-str {
+            margin-right: 20px;
+            color: gold;
+        }
+          input {
+              max-width: 60px;
               font-size: 18px;
           }
       }

@@ -25,6 +25,14 @@
             <p class="title-str">FLUIDMAX :</p>
             <input type="number" id="fluidmax-input" name="head" :value=_fluidMax>
           </div>
+          <div id="body-longitude">
+            <p class="title-str">LONGITUDE :</p>
+            <input type="text" id="longitude-input" name="head" :value=_longitude>
+          </div>
+          <div id="body-latitude">
+            <p class="title-str">LATITUDE :</p>
+            <input type="text" id="latitude-input" name="head" :value=_latitude>
+          </div>
         </div>
         <div class="popup-footer">
           <button v-on:click="popupUpdateInk">UPDATE</button>
@@ -50,25 +58,36 @@ export default class PopupInk extends Vue {
     @Prop({default: ""}) _substance! : string;
     @Prop({default:0}) _fluid!: number;
     @Prop({default: 0}) _fluidMax!: number;
+    @Prop({default: 0}) _latitude!: number;
+    @Prop({default: 0}) _longitude!: number;
+    
     
     ink :string = "";
     substance : string = "";
     fluid: number =0;
     fluidMax: number = 0;
+    longitude: number = 0;
+    latitdue: number = 0;
+    
 
     popupUpdateInk() {
         let ink = (<HTMLInputElement>document.getElementById("ink-input"));
         let substance = (<HTMLInputElement>document.getElementById("substance-input"));
         let fluid = (<HTMLInputElement>document.getElementById("fluid-input"));
         let fluidMax = (<HTMLInputElement>document.getElementById("fluidmax-input"));
+        let longitude = (<HTMLInputElement>document.getElementById("longitude-input"));
+        let latitude = (<HTMLInputElement>document.getElementById("latitude-input"));
         
         if (ink && substance && fluid && fluidMax) {
             try {
                 this.fluid = parseInt(fluid.value, 10);
                 this.fluidMax = parseInt(fluidMax.value, 10);
                 this.substance = substance.value;
+                this.longitude = parseFloat(longitude.value);
+                this.latitdue = parseFloat(latitude.value);
+                
                 this.ink = ink.value;
-                this.$emit("popupUpdateInk", this.ink, this.substance, this.fluid, this.fluidMax);
+                this.$emit("popupUpdateInk", this.ink, this.substance, this.fluid, this.fluidMax, this.longitude, this.latitdue);
             } catch(e) {
                 console.error(e);
             }
@@ -88,6 +107,8 @@ export default class PopupInk extends Vue {
         this._substance = this._substance;
         this.fluid = this._fluid;
         this.fluidMax = this._fluidMax;
+        this.longitude = this._longitude;
+        this.latitdue = this._latitude;
     }
 }
 </script>
@@ -161,6 +182,20 @@ export default class PopupInk extends Vue {
             margin-right: 20px;
             color: rgb(111, 0, 255);
             }
+          input {
+              max-width: 60px;
+              font-size: 18px;
+          }
+      }
+      #body-latitude, #body-longitude {
+          display: flex;
+          flex-direction: row;
+          justify-content: left;
+          align-items: center;
+          .title-str {
+            margin-right: 20px;
+            color: gold;
+        }
           input {
               max-width: 60px;
               font-size: 18px;

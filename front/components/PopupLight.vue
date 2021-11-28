@@ -21,6 +21,14 @@
             <p class="title-str">INTENSITY :</p>
             <input type="number" id="color-intensity" name="head" :value=_intensity>
           </div>
+          <div id="body-longitude">
+            <p class="title-str">LONGITUDE :</p>
+            <input type="text" id="longitude-input" name="head" :value=_longitude>
+          </div>
+          <div id="body-latitude">
+            <p class="title-str">LATITUDE :</p>
+            <input type="text" id="latitude-input" name="head" :value=_latitude>
+          </div>
         </div>
         <div class="popup-footer">
           <button v-on:click="popupUpdateLight">UPDATE</button>
@@ -46,17 +54,26 @@ export default class PopupLight extends Vue {
     @Prop({default: ""}) _currentNameObject! : string;
     @Prop({default:""}) _color!: string;
     @Prop({default: 0}) _intensity!: number;
-    
+    @Prop({default: 0}) _latitude!: number;
+    @Prop({default: 0}) _longitude!: number;
+
     currentLightToggle :boolean = false;
     currentNameObject : string = "";
     color: string ="";
     intensity: number = 0;
+    longitude: number = 0;
+    latitdue: number = 0;
 
     popupUpdateLight() {
         let colorIntensity = (<HTMLInputElement>document.getElementById("color-intensity"));
+        let longitude = (<HTMLInputElement>document.getElementById("longitude-input"));
+        let latitude = (<HTMLInputElement>document.getElementById("latitude-input"));
+
         if (colorIntensity) {
+            this.longitude = parseFloat(longitude.value);
+            this.latitdue = parseFloat(latitude.value);
             this.intensity = parseInt(colorIntensity.value);
-            this.$emit("popupUpdateLight", this.currentLightToggle, this.intensity);
+            this.$emit("popupUpdateLight", this.currentLightToggle, this.intensity, this.longitude, this.latitdue);
         }
     }
 
@@ -74,6 +91,8 @@ export default class PopupLight extends Vue {
         this.currentLightToggle = this._currentLightToggle;
         this.intensity = this._intensity;
         this.color = this._color;
+        this.longitude = this._longitude;
+        this.latitdue = this._latitude;
     }
 }
 </script>
@@ -162,7 +181,22 @@ export default class PopupLight extends Vue {
               font-size: 18px;
           }
       }
+      #body-latitude, #body-longitude {
+          display: flex;
+          flex-direction: row;
+          justify-content: left;
+          align-items: center;
+          .title-str {
+            margin-right: 20px;
+            color: gold;
+        }
+          input {
+              max-width: 60px;
+              font-size: 18px;
+          }
+      }
     }
+
     .popup-footer {
         margin-top: 20px;
         display: flex;
