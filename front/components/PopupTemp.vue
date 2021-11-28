@@ -9,17 +9,13 @@
             <img src="../assets/icon/temperature-sensor.png">
         </div>
         <div class="popup-body">
-          <div id="body-color-on-off">
-            <p class="title-str">POWER :</p>
-            <Toggle :_val=_currentLightToggle :_id=_currentNameObject  v-on:toggleObject=toggleObject />
-          </div>
           <div id="body-color-color">
-            <p class="title-str">COLOR :</p>
-            <input type="color" id="color-light" name="head" :value=_color>
+            <p class="title-str">TEMPERATURE :</p>
+            <input type="number" id="humidty-input" name="head" :value=_intensity>
           </div>
           <div id="body-intensity">
-            <p class="title-str">INTENSITY :</p>
-            <input type="number" id="color-intensity" name="head" :value=_intensity>
+            <p class="title-str">HUMIDITY :</p>
+            <input type="number" id="humidty-input" name="head" :value=_intensity>
           </div>
         </div>
         <div class="popup-footer">
@@ -144,7 +140,8 @@ export default class PopupTemp extends Vue {
           margin-right: 20px;
         }
         input {
-          border: none;
+            max-width: 40px;
+            font-size: 18px;
         }
       }
       #body-intensity {

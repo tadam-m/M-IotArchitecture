@@ -9,13 +9,21 @@
             <img src="../assets/icon/humidity-sensor.png">
         </div>
         <div class="popup-body">
-          <div id="body-ink-on-off">
-            <p class="title-str">POWER :</p>
-            <Toggle :_val=_currentLightToggle :_id=_currentNameObject  v-on:toggleObject=toggleObject />
+          <div id="body-ink">
+            <p class="title-str">INK :</p>
+            <input type="text" id="ink-input" name="head" value="">
           </div>
-          <div id="body-ink-color">
-            <p class="title-str">COLOR :</p>
-            <input type="color" id="color-light" name="head" :value=_color>
+          <div id="body-substance">
+            <p class="title-str">SUBSTANCE :</p>
+            <input type="text" id="substance-input" name="head" value="">
+          </div>
+          <div id="body-fluid">
+            <p class="title-str">FLUID :</p>
+            <input type="number" id="fluid-input" name="head" :value=_intensity>
+          </div>
+          <div id="body-fluidmax">
+            <p class="title-str">FLUIDMAX :</p>
+            <input type="number" id="fluidmax-input" name="head" :value=_intensity>
           </div>
         </div>
         <div class="popup-footer">
@@ -120,17 +128,7 @@ export default class PopupInk extends Vue {
     }
     .popup-body {
       margin-top: 40px;
-      #body-ink-on-off {
-        display: flex;
-        flex-direction: row;
-        justify-content: left;
-        align-items: center;
-        color: rgb(13, 92, 196);
-        .title-str {
-          margin-right: 20px;
-        }
-      }
-      #body-ink-color {
+      #body-ink,#body-substance {
         display: flex;
         flex-direction: row;
         justify-content: left;
@@ -140,10 +138,10 @@ export default class PopupInk extends Vue {
           margin-right: 20px;
         }
         input {
-          border: none;
+            max-width: 100px;
         }
       }
-      #body-intensity {
+      #body-fluid, #body-fluidmax {
           display: flex;
           flex-direction: row;
           justify-content: left;
