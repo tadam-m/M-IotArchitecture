@@ -95,6 +95,7 @@ export default class PopupInk extends Vue {
 <style lang="scss">
 #popup-ink {
     position: absolute;
+    font-family: 'Cyber';
     left:10%;
     padding: 20px;
     top:25%;

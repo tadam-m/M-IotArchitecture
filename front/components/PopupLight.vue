@@ -81,6 +81,7 @@ export default class PopupLight extends Vue {
 <style lang="scss">
 #popup-ampoule {
     position: absolute;
+    font-family: 'Cyber';
     left:10%;
     padding: 20px;
     top:25%;

@@ -77,6 +77,7 @@ export default class PopupTemp extends Vue {
 <style lang="scss">
 #popup-temp {
     position: absolute;
+    font-family: 'Cyber';
     left:10%;
     padding: 20px;
     top:25%;
