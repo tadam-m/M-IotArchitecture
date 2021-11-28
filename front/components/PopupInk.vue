@@ -11,23 +11,23 @@
         <div class="popup-body">
           <div id="body-ink">
             <p class="title-str">INK :</p>
-            <input type="text" id="ink-input" name="head" value="">
+            <input type="text" id="ink-input" name="head" :value=_ink>
           </div>
           <div id="body-substance">
             <p class="title-str">SUBSTANCE :</p>
-            <input type="text" id="substance-input" name="head" value="">
+            <input type="text" id="substance-input" name="head" :value=_substance>
           </div>
           <div id="body-fluid">
             <p class="title-str">FLUID :</p>
-            <input type="number" id="fluid-input" name="head" :value=_intensity>
+            <input type="number" id="fluid-input" name="head" :value=_fluid>
           </div>
           <div id="body-fluidmax">
             <p class="title-str">FLUIDMAX :</p>
-            <input type="number" id="fluidmax-input" name="head" :value=_intensity>
+            <input type="number" id="fluidmax-input" name="head" :value=_fluidMax>
           </div>
         </div>
         <div class="popup-footer">
-          <button v-on:click="popupUpdate">UPDATE</button>
+          <button v-on:click="popupUpdateInk">UPDATE</button>
         </div>
       </div>
 </template>
@@ -46,27 +46,37 @@ import {
 
 @Component
 export default class PopupInk extends Vue {
-    @Prop({default: true}) _currentLightToggle! : boolean;
-    @Prop({default: ""}) _currentNameObject! : string;
-    @Prop({default:""}) _color!: string;
-    @Prop({default: 0}) _intensity!: number;
+    @Prop({default: ""}) _ink! : string;
+    @Prop({default: ""}) _substance! : string;
+    @Prop({default:0}) _fluid!: number;
+    @Prop({default: 0}) _fluidMax!: number;
     
-    currentLightToggle :boolean = false;
-    currentNameObject : string = "";
-    color: string ="";
-    intensity: number = 0;
+    ink :string = "";
+    substance : string = "";
+    fluid: number =0;
+    fluidMax: number = 0;
 
-    popupUpdate() {
-        let colorIntensity = (<HTMLInputElement>document.getElementById("color-intensity"));
-        if (colorIntensity) {
-            this.intensity = parseInt(colorIntensity.value);
-            this.$emit("popupUpdateLight", this.currentLightToggle, this.intensity);
+    popupUpdateInk() {
+        let ink = (<HTMLInputElement>document.getElementById("ink-input"));
+        let substance = (<HTMLInputElement>document.getElementById("substance-input"));
+        let fluid = (<HTMLInputElement>document.getElementById("fluid-input"));
+        let fluidMax = (<HTMLInputElement>document.getElementById("fluidmax-input"));
+        
+        if (ink && substance && fluid && fluidMax) {
+            try {
+                this.fluid = parseInt(fluid.value, 10);
+                this.fluidMax = parseInt(fluidMax.value, 10);
+                this.substance = substance.value;
+                this.ink = ink.value;
+                this.$emit("popupUpdateInk", this.ink, this.substance, this.fluid, this.fluidMax);
+            } catch(e) {
+                console.error(e);
+            }
         }
     }
 
     toggleObject(id:any, val: any) {
-        this.currentLightToggle = val;
-        this.$emit("toggleObject", this.currentNameObject, this.currentLightToggle);
+       // this.$emit("toggleObject", this.currentNameObject, this.currentLightToggle);
     }
 
     closePopup() {
@@ -74,10 +84,10 @@ export default class PopupInk extends Vue {
     }
 
     mounted() {
-        this.currentNameObject = this._currentNameObject;
-        this.currentLightToggle = this._currentLightToggle;
-        this.intensity = this._intensity;
-        this.color = this._color;
+        this.ink = this._ink;
+        this._substance = this._substance;
+        this.fluid = this._fluid;
+        this.fluidMax = this._fluidMax;
     }
 }
 </script>
@@ -151,7 +161,7 @@ export default class PopupInk extends Vue {
             color: rgb(111, 0, 255);
             }
           input {
-              max-width: 40px;
+              max-width: 60px;
               font-size: 18px;
           }
       }

@@ -9,17 +9,17 @@
             <img src="../assets/icon/temperature-sensor.png">
         </div>
         <div class="popup-body">
-          <div id="body-color-color">
+          <div id="body-temp-color">
             <p class="title-str">TEMPERATURE :</p>
-            <input type="number" id="humidty-input" name="head" :value=_intensity>
+            <input type="number" id="temperature-input" name="head" :value=_temperature>
           </div>
-          <div id="body-intensity">
+          <div id="body-humidity">
             <p class="title-str">HUMIDITY :</p>
-            <input type="number" id="humidty-input" name="head" :value=_intensity>
+            <input type="number" id="humidty-input" name="head" :value=_humidity>
           </div>
         </div>
         <div class="popup-footer">
-          <button v-on:click="popupUpdate">UPDATE</button>
+          <button v-on:click="popupUpdateTemp">UPDATE</button>
         </div>
       </div>
 </template>
@@ -38,27 +38,29 @@ import {
 
 @Component
 export default class PopupTemp extends Vue {
-    @Prop({default: true}) _currentLightToggle! : boolean;
-    @Prop({default: ""}) _currentNameObject! : string;
-    @Prop({default:""}) _color!: string;
-    @Prop({default: 0}) _intensity!: number;
+    @Prop({default: 0}) _temperature! : number;
+    @Prop({default: 0}) _humidity! : number;
     
-    currentLightToggle :boolean = false;
-    currentNameObject : string = "";
-    color: string ="";
-    intensity: number = 0;
+    temperature: number = 0;
+    humidity: number = 0;
 
-    popupUpdate() {
-        let colorIntensity = (<HTMLInputElement>document.getElementById("color-intensity"));
-        if (colorIntensity) {
-            this.intensity = parseInt(colorIntensity.value);
-            this.$emit("popupUpdateLight", this.currentLightToggle, this.intensity);
+    popupUpdateTemp() {
+        let temperature = (<HTMLInputElement>document.getElementById("temperature-input"));
+        let humidity = (<HTMLInputElement>document.getElementById("humidty-input"));
+        
+        try {
+            this.temperature = parseInt(temperature.value, 10);
+            this.humidity = parseInt(humidity.value, 10);
+        } catch(e) {
+            console.error(e);
+            this.temperature = -42;
+            this.humidity = -42;
         }
+        this.$emit("popupUpdateTemp", this.temperature, this.humidity);
     }
 
     toggleObject(id:any, val: any) {
-        this.currentLightToggle = val;
-        this.$emit("toggleObject", this.currentNameObject, this.currentLightToggle);
+       // this.$emit("toggleObject", this.currentNameObject, this.currentLightToggle);
     }
 
     closePopup() {
@@ -66,10 +68,8 @@ export default class PopupTemp extends Vue {
     }
 
     mounted() {
-        this.currentNameObject = this._currentNameObject;
-        this.currentLightToggle = this._currentLightToggle;
-        this.intensity = this._intensity;
-        this.color = this._color;
+        this.temperature = this._temperature;
+        this.humidity = this._humidity;
     }
 }
 </script>
@@ -130,7 +130,7 @@ export default class PopupTemp extends Vue {
           margin-right: 20px;
         }
       }
-      #body-color-color {
+      #body-temp-color {
         display: flex;
         flex-direction: row;
         justify-content: left;
@@ -140,11 +140,11 @@ export default class PopupTemp extends Vue {
           margin-right: 20px;
         }
         input {
-            max-width: 40px;
+            max-width: 60px;
             font-size: 18px;
         }
       }
-      #body-intensity {
+      #body-humidity {
           display: flex;
           flex-direction: row;
           justify-content: left;

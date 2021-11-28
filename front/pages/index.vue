@@ -9,11 +9,21 @@
       v-on:toggleObject=toggleObject
       v-on:closePopup=closePopup
       />
+      <PopupInk v-if="popupInk" 
+      v-on:closePopup=closePopup 
+      :_ink=inkArray[iLight].ink
+      :_substance=inkArray[iLight].substance
+      :_fluid=inkArray[iLight].fluid
+      :_fluidMax=inkArray[iLight].fluidMax
+      v-on:popupUpdateInk=popupUpdateInk
+      />
 
-      <PopupInk v-if="popupInk" v-on:closePopup=closePopup />
-      <PopupTemp v-if="popupTemp" v-on:closePopup=closePopup />
+      <PopupTemp v-if="popupTemp" v-on:closePopup=closePopup  
+      v-on:popupUpdateTemp=popupUpdateTemp
+      :_humidity=tempArray[iLight].humidity
+      :_temperature=tempArray[iLight].temperature
+      />
     </div>
-      
 </template>
 
 <script lang="ts">
@@ -261,14 +271,20 @@ export default class Index extends Vue {
   openPopupAmpoule(name: any) {
     if (this.popupAmpoule === true) return;
     this.popupAmpoule = true;
+    this.popupTemp = false;
+    this.popupInk = false;
   }
   openPopupInk(name: any) {
     if (this.popupInk === true) return;
     this.popupInk = true;
+    this.popupAmpoule = false;
+    this.popupTemp = false;
   }
   openPopupTemp(name: any) {
     if (this.popupTemp === true) return;
     this.popupTemp = true;
+    this.popupInk = false;
+    this.popupAmpoule = false;
   }
 
   popupUpdateLight(toggled:boolean, intensity: number) {
@@ -287,6 +303,20 @@ export default class Index extends Vue {
       this.lightArray[this.iLight].intensity);
     //Send Request
     this.sendTelemetry();
+  }
+
+  popupUpdateTemp(temperature: number, humidity: number) {
+    this.tempArray[this.iLight].humidity = humidity;
+    this.tempArray[this.iLight].temperature = temperature;
+    this.closePopup();
+  }
+
+  popupUpdateInk(ink: string, substance : string, fluid : number, fluidMax : number) {
+    this.inkArray[this.iLight].ink = ink;
+    this.inkArray[this.iLight].substance = substance;
+    this.inkArray[this.iLight].fluid = fluid;
+    this.inkArray[this.iLight].fluidMax = fluidMax;
+    this.closePopup();
   }
 
   async sendTelemetry() {
